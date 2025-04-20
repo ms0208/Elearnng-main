@@ -45,7 +45,7 @@ except Exception as e:
 
 # Define request/response models
 class CourseInfo(BaseModel):
-    CourseID: str
+    CourseID: int
     CourseTitle: str
     Description: str
     # Tags: str
@@ -107,10 +107,11 @@ async def get_recommendations(request: RecommendationRequest):
         user_data = request.user_profile.dict()
         
         # Get candidate courses
-        if request.candidate_course_ids:
-            candidate_courses = courses[courses['CourseID'].isin(request.candidate_course_ids)].copy()
+      # Get candidate courses
+        if request.course_profile:
+         candidate_courses = courses[courses['CourseID'] != request.course_profile.CourseID].copy()
         else:
-            candidate_courses = courses.copy()
+         candidate_courses = courses.copy()
         
         # Prepare features for prediction
         candidate_courses['content_features'] = (

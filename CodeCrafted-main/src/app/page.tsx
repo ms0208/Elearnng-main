@@ -27,12 +27,12 @@ export default function HomePage() {
       setIsLoading(false);
     }
   };
-
   const fetchRecommended = async () => {
     const cachedData = localStorage.getItem("recommendRequestResponse");
 
     if (cachedData) {
       const { response } = JSON.parse(cachedData);
+      console.log("📦 Loaded recommended courses from cache:", response);
       setFetchCourse(response);
       setIsRecommendedLoading(false);
       return;
@@ -41,42 +41,54 @@ export default function HomePage() {
     const requestData = {
       user_profile: {
         UserID: "67fb3576eb3ed9b234f8bd47",
-        total_courses_taken: 1,
-        avg_rating: 0.0,
+        total_courses_taken: 3,
+        avg_rating: 4.5
       },
       course_profile: {
-        CourseID: 1,
-        CourseTitle: "C++ programming",
-        Description: "Great courses",
-        Duration: "2hr",
-        DifficultyLevel: "Medium",
+            CourseID: 1,
+            CourseTitle: "C++ programming",
+            Description: "Great courses",
+            Duration: "2hr",
+            DifficultyLevel: "Medium"
       },
       num_recommendations: 10,
-      exclude_taken_courses: true,
+      exclude_taken_courses: true
     };
 
     try {
-      const res = await axios.post("http://127.0.0.1:8000/recommend")//,(
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify(requestData),
-      // });
+      const res = await fetch("http://127.0.0.1:8000/recommend", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestData),
+      });
 
-      const result = await res.data;
+      const result = await res.json();
+      console.log("✅ Recommendation API Response:", result);
 
-      // Store request and response in localStorage
+      let courses = [];
+
+      if (Array.isArray(result)) {
+        courses = result;
+      } else if (result?.recommendations || result?.response) {
+        courses = result.recommendations || result.response;
+      } else {
+        console.warn("⚠️ Unexpected response format:", result);
+      }
+
+      console.log("🎯 Final parsed recommendations:", courses);
+      setFetchCourse(courses);
+
       localStorage.setItem(
         "recommendRequestResponse",
         JSON.stringify({
           request: requestData,
-          response: result,
+          response: courses,
         })
       );
 
       setFetchCourse(result);
-      console.log(result)
     } catch (error) {
       console.error("Recommendation fetch error:", error);
     } finally {
