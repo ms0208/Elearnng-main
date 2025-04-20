@@ -18,6 +18,12 @@ const CourseSchema = new mongoose.Schema({
   CourseRating: {
     type: Number,
   },
+  CourseImages:{
+    type:String
+  },
+  CoursePrice:{
+    type:String
+  }
 });
 
 export default mongoose.model('Course', CourseSchema);

@@ -22,6 +22,7 @@ mongoose.connect(process.env.MONGO_URI, {
 
 // Routes
 app.use('/api/users', userRoutes);
+app.use('/images',express.static('uploads/images'))
 app.use('/api/courses', courseRoutes);
 app.use('/api/interactions', interactionRoutes);
 

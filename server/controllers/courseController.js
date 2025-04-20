@@ -2,7 +2,18 @@ import Course from '../models/course.js';
 
 export const createCourse = async (req, res) => {
   try {
-    const course = new Course(req.body);
+    let image_filename = '';
+
+    // Check if image file exists in the request
+    if (req.file) {
+      image_filename = req.file.filename;
+    }
+
+    const courseData = {
+      ...req.body,
+      CourseImages: image_filename, // Set image filename or empty if not uploaded
+    };
+    const course = new Course(courseData);
     const saved = await course.save();
     res.status(201).json(saved);
   } catch (err) {

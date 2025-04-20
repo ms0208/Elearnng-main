@@ -14,6 +14,8 @@ export type Course = {
   Description: string;
   Duration: string;
   DifficultyLevel: string;
+  CourseImages:string;
+  CoursePrice:string;
 };
 
 export default function CoursesPage() {
@@ -93,7 +95,7 @@ export default function CoursesPage() {
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
             {/* Filters */}
             <div className="lg:col-span-1">
-              <div className="sticky top-24 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+              <div>
                 <h2 className="mb-6 text-lg font-semibold text-gray-900">Filters</h2>
                 <CourseFilters
                   selectedCategory={selectedCategory}
