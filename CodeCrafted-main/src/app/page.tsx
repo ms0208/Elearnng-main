@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { MainLayout } from "@/components/layout/MainLayout";
+import axios from 'axios'
 import { Button } from "@/components/ui/Button";
 import { CourseGrid } from "@/components/courses/CourseGrid";
 // import { CourseSearchBar } from "@/components/courses/CourseSearchBar";
@@ -14,26 +15,84 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRecommendedLoading, setIsRecommendedLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        const res = await fetch("http://localhost:5000/api/courses/course");
-        const data = await res.json();
+  const fetchCourses = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/courses/course");
+      const data = await res.json();
 
-        const fetchApi = await fetch("http://127.0.0.1:8000/recommend");
-        const fetchData = await fetchApi.json();
+      setPopularCourses(data.slice(0, 8)); // Top 8 courses
+    } catch (error) {
+      console.error("Failed to fetch popular courses:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-        setPopularCourses(data.slice(0, 8)); // Top 8
-        setFetchCourse(fetchData);
-      } catch (error) {
-        console.error("Failed to fetch courses:", error);
-      } finally {
-        setIsLoading(false);
-        setIsRecommendedLoading(false);
-      }
+  const fetchRecommended = async () => {
+    const cachedData = localStorage.getItem("recommendRequestResponse");
+
+    if (cachedData) {
+      const { response } = JSON.parse(cachedData);
+      setFetchCourse(response);
+      setIsRecommendedLoading(false);
+      return;
+    }
+
+    const requestData = {
+      user_profile: {
+        UserID: "67fb3576eb3ed9b234f8bd47",
+        total_courses_taken: 1,
+        avg_rating: 0.0,
+      },
+      course_profile: {
+        CourseID: 1,
+        CourseTitle: "C++ programming",
+        Description: "Great courses",
+        Duration: "2hr",
+        DifficultyLevel: "Medium",
+      },
+      num_recommendations: 10,
+      exclude_taken_courses: true,
     };
 
+    try {
+      const res = await axios.post("http://127.0.0.1:8000/recommend")//,(
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify(requestData),
+      // });
+
+      const result = await res.data;
+
+      // Store request and response in localStorage
+      localStorage.setItem(
+        "recommendRequestResponse",
+        JSON.stringify({
+          request: requestData,
+          response: result,
+        })
+      );
+
+      setFetchCourse(result);
+      console.log(result)
+    } catch (error) {
+      console.error("Recommendation fetch error:", error);
+    } finally {
+      setIsRecommendedLoading(false);
+    }
+  };
+
+  const refreshRecommendations = () => {
+    localStorage.removeItem("recommendRequestResponse");
+    setIsRecommendedLoading(true);
+    fetchRecommended();
+  };
+
+  useEffect(() => {
     fetchCourses();
+    fetchRecommended();
   }, []);
 
   return (
