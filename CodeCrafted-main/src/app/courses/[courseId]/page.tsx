@@ -106,12 +106,11 @@ export default function CourseDetailPage() {
     setIsPurchasing(true);
 
     try {
-      await axios.post("http://localhost:5000/api/students/purchase-course", {
-        userId: user.id,
-        courseId,
-      });
-
-      setHasUserPurchased(true);
+      // await axios.post("http://localhost:5000/api/students/purchase-course", {
+      //   userId: user.id,
+      //   courseId,
+      // });
+      // setHasUserPurchased(true);
       toast.success("Course purchased successfully!");
       router.push(`/dashboard/student/course/${courseId}`);
     } catch (error) {
@@ -180,7 +179,7 @@ export default function CourseDetailPage() {
 
               <div className="mb-6 flex flex-wrap items-center text-sm space-x-4">
                 <span>Duration: {course.Duration}</span>
-                <span>Students: {course.purchaseCount}</span>
+                {/* <span>Students: {course.purchaseCount}</span> */}
               </div>
 
               {hasUserPurchased ? (

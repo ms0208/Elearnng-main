@@ -3,10 +3,9 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { MainLayout } from "@/components/layout/MainLayout";
-import axios from 'axios'
+import axios from "axios";
 import { Button } from "@/components/ui/Button";
 import { CourseGrid } from "@/components/courses/CourseGrid";
-// import { CourseSearchBar } from "@/components/courses/CourseSearchBar";
 import { Course } from "@/components/courses/CoursePage";
 
 export default function HomePage() {
@@ -14,12 +13,12 @@ export default function HomePage() {
   const [fetchCourse, setFetchCourse] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRecommendedLoading, setIsRecommendedLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const fetchCourses = async () => {
     try {
       const res = await fetch("http://localhost:5000/api/courses/course");
       const data = await res.json();
-
       setPopularCourses(data.slice(0, 8)); // Top 8 courses
     } catch (error) {
       console.error("Failed to fetch popular courses:", error);
@@ -27,6 +26,7 @@ export default function HomePage() {
       setIsLoading(false);
     }
   };
+
   const fetchRecommended = async () => {
     const cachedData = localStorage.getItem("recommendRequestResponse");
 
@@ -42,17 +42,17 @@ export default function HomePage() {
       user_profile: {
         UserID: "67fb3576eb3ed9b234f8bd47",
         total_courses_taken: 3,
-        avg_rating: 4.5
+        avg_rating: 4.5,
       },
       course_profile: {
-            CourseID: 1,
-            CourseTitle: "C++ programming",
-            Description: "Great courses",
-            Duration: "2hr",
-            DifficultyLevel: "Medium"
+        CourseID: 1,
+        CourseTitle: "C++ programming",
+        Description: "Great courses",
+        Duration: "2hr",
+        DifficultyLevel: "Medium",
       },
-      num_recommendations: 10,
-      exclude_taken_courses: true
+      num_recommendations: 20,
+      exclude_taken_courses: true,
     };
 
     try {
@@ -77,7 +77,6 @@ export default function HomePage() {
         console.warn("⚠️ Unexpected response format:", result);
       }
 
-      console.log("🎯 Final parsed recommendations:", courses);
       setFetchCourse(courses);
 
       localStorage.setItem(
@@ -87,8 +86,6 @@ export default function HomePage() {
           response: courses,
         })
       );
-
-      setFetchCourse(result);
     } catch (error) {
       console.error("Recommendation fetch error:", error);
     } finally {
@@ -103,8 +100,16 @@ export default function HomePage() {
   };
 
   useEffect(() => {
-    fetchCourses();
-    fetchRecommended();
+
+    const token = localStorage.getItem("token"); // Replace with your actual auth logic
+    if (token) {
+      setIsLoggedIn(true);
+      fetchCourses();
+      fetchRecommended();
+    } else {
+      setIsLoggedIn(false);
+      setIsRecommendedLoading(false);
+    }
   }, []);
 
   return (
@@ -118,7 +123,6 @@ export default function HomePage() {
           <p className="mb-8 max-w-2xl mx-auto text-lg text-blue-100">
             Start, switch, or advance your career with thousands of courses from expert instructors.
           </p>
-          {/* <CourseSearchBar /> */}
           <div className="mt-8 flex justify-center gap-4">
             <Link href="/signup">
               <Button size="lg" className="bg-white text-blue-700 hover:bg-blue-50">
@@ -147,9 +151,24 @@ export default function HomePage() {
           {isLoading ? (
             <div className="flex h-64 items-center justify-center">
               <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600"></div>
+              <div className="text-center text-gray-500">
+                Please{" "}
+                <Link href="/login" className="text-blue-600 underline">
+                  log in
+                </Link>{" "}
+                to view popular courses.
+              </div>
             </div>
-          ) : (
+          ) : isLoggedIn ? (
             <CourseGrid courses={popularCourses} />
+          ) : (
+            <div className="text-center text-gray-500">
+              Please{" "}
+              <Link href="/login" className="text-blue-600 underline">
+                log in
+              </Link>{" "}
+              to view popular courses.
+            </div>
           )}
         </div>
       </section>
@@ -165,24 +184,30 @@ export default function HomePage() {
             <div className="flex h-64 items-center justify-center">
               <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600"></div>
             </div>
-          ) : Array.isArray(fetchCourse) && fetchCourse.length > 0 ? (
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {fetchCourse.map((course: any, index: number) => (
-                <div
-                  key={index}
-                  className="rounded-lg bg-white p-6 shadow-md transition-transform hover:scale-105 duration-300"
-                >
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    {course.course_title}
-                  </h3>
-                  <p className="text-gray-700">{course.description}</p>
-                </div>
-              ))}
-            </div>
+          ) : isLoggedIn ? (
+            Array.isArray(fetchCourse) && fetchCourse.length > 0 ? (
+              <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+                {fetchCourse.map((course: any, index: number) => (
+                  <div
+                    key={index}
+                    className="rounded-lg bg-white p-6 shadow-md transition-transform hover:scale-105 duration-300"
+                  >
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      {course.course_title}
+                    </h3>
+                    <p className="text-gray-700">{course.description}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-gray-500">
+                No recommendations available at the moment.
+              </p>
+            )
           ) : (
-            <p className="text-center text-gray-500">
-              No recommendations available at the moment.
-            </p>
+            <div className="text-center text-gray-600">
+              <p>Please <Link href="/login" className="text-blue-600 underline">log in</Link> to see personalized course recommendations.</p>
+            </div>
           )}
         </div>
       </section>
@@ -251,5 +276,3 @@ export default function HomePage() {
     </MainLayout>
   );
 }
-
-
